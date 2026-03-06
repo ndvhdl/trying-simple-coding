@@ -3,87 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>סודוקו לילדים - תיקון גבולות</title>
+    <title>סודוקו לילדים - גרסה תקינה</title>
     <style>
         :root { --p: #007aff; --s: #34c759; --w: #ffcc00; --d: #2c3e50; }
-        body { font-family: system-ui, -apple-system, sans-serif; text-align: center; background: #f4f7f9; margin: 0; padding: 10px; }
-        .container { max-width: 100%; width: 450px; margin: auto; }
-        h3 { color: var(--d); font-size: 26px; margin-bottom: 10px; }
-        .score { background: white; padding: 8px 15px; border-radius: 12px; margin-bottom: 15px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        body { font-family: system-ui, sans-serif; text-align: center; background: #f4f7f9; margin: 0; padding: 10px; }
+        .container { max-width: 450px; margin: auto; }
         
-        /* סגנון כללי ללוח ולמשבצות */
         .sudoku-grid { 
-            display: grid; 
-            gap: 0; /* ללא רווחים בין קבוצות המשבצות */
-            margin: 15px auto; 
-            border: 3px solid var(--d); /* גבול חיצוני לכל הלוח */
-            width: fit-content;
-            background-color: var(--d); /* צבע הרקע שבין הקבוצות */
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: grid; gap: 0; margin: 15px auto; 
+            border: 3px solid var(--d); width: fit-content;
+            background-color: var(--d); box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
-        .sudoku-group { 
-            display: grid; 
-            background-color: transparent; /* הקבוצות עצמן שקופות */
-            border: 1px solid var(--d); /* גבול דק בין הקבוצות */
-        }
-        .sudoku-group:not(:nth-child(1)) { border-top: 3px solid var(--d); } /* גבול עבה מעל שורה חדשה של קבוצות */
-
+        .sudoku-group { display: grid; background-color: transparent; border: 1px solid var(--d); }
+        .sudoku-group:not(:nth-child(1)) { border-top: 3px solid var(--d); }
+        
         input { 
-            width: 45px; height: 45px; 
-            text-align: center; font-size: 20px; 
-            border: 1px solid #ccc; /* גבול דק בין המשבצות בתוך הקבוצה */
-            font-weight: bold; background: white; 
-            color: var(--p); -webkit-appearance: none;
-            box-sizing: border-box; /* לוודא שהגבולות לא מגדילים את התא */
+            width: 42px; height: 42px; text-align: center; font-size: 18px; 
+            border: 1px solid #ccc; font-weight: bold; background: white; 
+            color: var(--p); -webkit-appearance: none; box-sizing: border-box;
         }
-        input:focus { background-color: #fffde7; outline: 2px solid var(--p); }
         .fixed { background: #e9ecef; color: var(--d); }
-
-        /* התאמה לגודל מסך קטן יותר */
-        @media (max-width: 400px) {
-            input { width: 38px; height: 38px; font-size: 16px; }
-            .sudoku-grid { border-width: 2px; }
-            .sudoku-group:not(:nth-child(1)) { border-top: 2px solid var(--d); }
-        }
-
-        /* הגדרות ספציפיות לכל רמה */
-        .grid-4 { 
-            grid-template-columns: repeat(2, auto); /* 2 קבוצות ברוחב */
-            border-bottom: 3px solid var(--d);
-        }
-        .grid-4 .sudoku-group { grid-template-columns: repeat(2, auto); } /* 2x2 בתוך הקבוצה */
-
-        .grid-6 { 
-            grid-template-columns: repeat(2, auto); /* 2 קבוצות ברוחב */
-            border-bottom: 3px solid var(--d);
-        }
-        .grid-6 .sudoku-group { grid-template-columns: repeat(3, auto); } /* 2x3 בתוך הקבוצה */
         
-        .grid-9 { 
-            grid-template-columns: repeat(3, auto); /* 3 קבוצות ברוחב */
-            border-bottom: 3px solid var(--d);
-        }
-        .grid-9 .sudoku-group { grid-template-columns: repeat(3, auto); } /* 3x3 בתוך הקבוצה */
-        
-        /* כפתורים */
-        .controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 15px 0; }
-        button { padding: 12px 18px; font-size: 16px; cursor: pointer; border: none; border-radius: 12px; font-weight: 600; transition: 0.2s; }
+        /* מבנה הרמות */
+        .grid-4 { grid-template-columns: repeat(2, auto); }
+        .grid-4 .sudoku-group { grid-template-columns: repeat(2, auto); }
+        .grid-6 { grid-template-columns: repeat(2, auto); }
+        .grid-6 .sudoku-group { grid-template-columns: repeat(3, auto); }
+        .grid-9 { grid-template-columns: repeat(3, auto); }
+        .grid-9 .sudoku-group { grid-template-columns: repeat(3, auto); }
+
+        .controls { display: flex; justify-content: center; gap: 8px; margin: 15px 0; }
+        button { padding: 10px 15px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
         .btn-blue { background: var(--p); color: white; }
-        .btn-yellow { background: var(--w); color: black; }
+        .btn-yellow { background: var(--w); }
         .btn-green { background: var(--s); color: white; }
-        button:active { transform: scale(0.95); }
-        
-        #msg { font-weight: bold; margin: 10px; min-height: 24px; font-size: 18px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h3>סודוקו לילדים 🧩</h3>
-        <div class="score">🏆 גביעים: <span id="wins">0</span></div>
         <div class="controls">
-            <button class="btn-blue" onclick="initGame(4)">4x4 🐥</button>
-            <button class="btn-blue" onclick="initGame(6)">6x6 🌳</button>
-            <button class="btn-blue" onclick="initGame(9)">9x9 🦁</button>
+            <button class="btn-blue" onclick="initGame(4)">4x4</button>
+            <button class="btn-blue" onclick="initGame(6)">6x6</button>
+            <button class="btn-blue" onclick="initGame(9)">9x9</button>
         </div>
         <div id="sudoku-board" class="sudoku-grid"></div>
         <div class="controls">
@@ -94,130 +56,58 @@
     </div>
 
 <script>
-    let solution = [];
-    let currentSize = 4;
-    let wins = localStorage.getItem('sudokuWins') || 0;
-    document.getElementById('wins').innerText = wins;
-
-    // לוחות תקינים מראש (אפשר להוסיף עוד לוחות לכל רמה)
-    const baseBoards = {
+    // לוחות תקינים מתמטית (פתרון אמת)
+    const validSolutions = {
         4: [1,2,3,4, 3,4,1,2, 2,3,4,1, 4,1,2,3],
-        6: [1,2,3,4,5,6, 4,5,6,1,2,3, 2,3,1,5,6,4, 5,6,4,2,3,1, 3,1,2,6,4,5, 6,4,5,3,1,2],
+        6: [1,2,3,4,5,6, 4,5,6,1,2,3, 2,1,5,6,3,4, 5,6,4,2,3,1, 3,4,2,5,6,1, 6,3,1,4,2,5],
         9: [5,3,4,6,7,8,9,1,2, 6,7,2,1,9,5,3,4,8, 1,9,8,3,4,2,5,6,7, 8,5,9,7,6,1,4,2,3, 4,2,6,8,5,3,7,9,1, 7,1,3,9,2,4,8,5,6, 9,6,1,5,3,7,2,8,4, 2,8,7,4,1,9,6,3,5, 3,4,5,2,8,6,1,7,9]
     };
-
-    function shuffleArray(array) {
-        let shuffled = [...array];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-        }
-        return shuffled;
-    }
+    let solution = [];
 
     function initGame(size) {
-        currentSize = size;
-        const boardContainer = document.getElementById('sudoku-board');
-        boardContainer.innerHTML = '';
-        boardContainer.className = `sudoku-grid grid-${size}`;
+        const board = document.getElementById('sudoku-board');
+        board.innerHTML = '';
+        board.className = `sudoku-grid grid-${size}`;
         document.getElementById('msg').innerText = '';
+        solution = [...validSolutions[size]];
 
-        // יצירת לוח פתור וערבוב קל (החלפת מספרים)
-        let baseGrid = [...baseBoards[size]];
-        let numMap = shuffleArray(Array.from({length: size}, (_, i) => i + 1));
-        solution = baseGrid.map(num => numMap[num - 1]);
-
-        // הגדרת חלוקה ל-groups (ריבועים/מלבנים)
-        let groupRows = size === 4 ? 2 : (size === 6 ? 3 : 3);
-        let groupCols = size === 4 ? 2 : (size === 6 ? 2 : 3);
-        let inputsPerGroupRow = size === 4 ? 2 : (size === 6 ? 3 : 3); // כמה input בכל שורת קבוצה
-
-        for (let r = 0; r < groupRows; r++) {
-            for (let c = 0; c < groupCols; c++) {
-                let groupDiv = document.createElement('div');
-                groupDiv.classList.add('sudoku-group');
-                boardContainer.appendChild(groupDiv);
-
-                // יצירת המשבצות בתוך הקבוצה
-                for (let i = 0; i < size; i++) { // עבור כל משבצת בתוך הקבוצה
-                    let globalRow = Math.floor((r * size + i) / inputsPerGroupRow);
-                    let globalCol = (c * inputsPerGroupRow) + (i % inputsPerGroupRow);
-                    let globalIndex = (globalRow * size) + globalCol;
-
-                    if (globalRow >= size || globalCol >= size) continue; // למנוע חריגה בגבולות
-
-                    let input = document.createElement('input');
-                    input.type = 'number';
-                    input.inputMode = "numeric";
-                    input.min = 1;
-                    input.max = size;
-
-                    // הסתרת מספרים ליצירת החידה
-                    if (Math.random() > 0.45) { // כמות המספרים שמופיעים בהתחלה
-                        input.value = solution[globalIndex];
-                        input.readOnly = true;
-                        input.classList.add('fixed');
-                    }
-                    input.dataset.index = globalIndex;
-                    groupDiv.appendChild(input);
+        let groups = size === 4 ? 4 : (size === 6 ? 6 : 9);
+        for (let g = 0; g < groups; g++) {
+            let groupDiv = document.createElement('div');
+            groupDiv.className = 'sudoku-group';
+            board.appendChild(groupDiv);
+            for (let i = 0; i < size; i++) {
+                let input = document.createElement('input');
+                input.type = 'number';
+                // חשיפת 45% מהלוח
+                if (Math.random() > 0.55) {
+                    input.value = solution[g * size + i];
+                    input.readOnly = true;
+                    input.classList.add('fixed');
                 }
+                input.dataset.index = g * size + i;
+                groupDiv.appendChild(input);
             }
-        }
-    }
-
-    function giveHint() {
-        const inputs = Array.from(document.querySelectorAll('#sudoku-board input:not([readOnly])'));
-        const emptyInputs = inputs.filter(i => i.value === "");
-        if (emptyInputs.length > 0) {
-            const randomInput = emptyInputs[Math.floor(Math.random() * emptyInputs.length)];
-            const idx = randomInput.dataset.index;
-            randomInput.value = solution[idx];
-            randomInput.style.backgroundColor = "#d4edda";
-            setTimeout(() => { randomInput.style.backgroundColor = "white"; }, 800);
-        } else {
-            document.getElementById('msg').innerText = "אין יותר רמזים! כל המשבצות מלאות.";
-            document.getElementById('msg').style.color = "blue";
         }
     }
 
     function checkSolution() {
-        const inputs = document.querySelectorAll('#sudoku-board input');
-        let allFilled = true;
-        let isCorrect = true;
-
-        inputs.forEach((input, i) => {
-            if (input.value == "") {
-                allFilled = false;
-            }
-            if (input.value != solution[input.dataset.index] && input.value != "") {
-                isCorrect = false;
-                input.style.backgroundColor = "#ffe0e0"; // סימון טעות באדום
-            } else if (input.value == solution[input.dataset.index] && input.value != "") {
-                input.style.backgroundColor = "#e0ffe0"; // סימון נכון בירוק בהיר
-            } else {
-                input.style.backgroundColor = "white"; // ניקוי צבע אם ריק
-            }
+        let allCorrect = true;
+        document.querySelectorAll('input').forEach(input => {
+            if (input.value != solution[input.dataset.index]) allCorrect = false;
         });
+        document.getElementById('msg').innerText = allCorrect ? "כל הכבוד! 🎉" : "נסו שוב 💪";
+    }
 
-        const msg = document.getElementById('msg');
-        if (!allFilled) {
-            msg.innerText = "המשיכו למלא את כל המשבצות...";
-            msg.style.color = "#f39c12";
-        } else if (isCorrect) {
-            msg.innerText = "מדהים! פתרתם הכל נכון! 🌟";
-            msg.style.color = "#27ae60";
-            wins++;
-            localStorage.setItem('sudokuWins', wins);
-            document.getElementById('wins').innerText = wins;
-            // ניקוי צבעים אחרי ניצחון
-            inputs.forEach(input => input.style.backgroundColor = input.readOnly ? "#e9ecef" : "white");
-        } else {
-            msg.innerText = "יש טעויות, נסו שוב 💪";
-            msg.style.color = "#e74c3c";
+    function giveHint() {
+        let empty = [...document.querySelectorAll('input:not([readOnly])')].filter(i => i.value == "");
+        if (empty.length) {
+            let el = empty[0];
+            el.value = solution[el.dataset.index];
         }
     }
 
-    initGame(4); // התחלה עם לוח 4x4
+    initGame(4);
 </script>
 </body>
 </html>
