@@ -3,111 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>סודוקו לילדים - גרסה תקינה</title>
+    <title>סודוקו לילדים</title>
     <style>
-        :root { --p: #007aff; --s: #34c759; --w: #ffcc00; --d: #2c3e50; }
-        body { font-family: system-ui, sans-serif; text-align: center; background: #f4f7f9; margin: 0; padding: 10px; }
-        .container { max-width: 450px; margin: auto; }
-        
-        .sudoku-grid { 
-            display: grid; gap: 0; margin: 15px auto; 
-            border: 3px solid var(--d); width: fit-content;
-            background-color: var(--d); box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        :root { --d: #2c3e50; --p: #007aff; }
+        body { font-family: sans-serif; text-align: center; background: #f4f7f9; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        .score { font-size: 1.2rem; font-weight: bold; margin: 10px; color: var(--d); }
+        .sudoku-board { 
+            display: grid; border: 3px solid var(--d); background-color: var(--d); 
+            gap: 2px; width: 95vw; max-width: 400px; aspect-ratio: 1/1;
         }
-        .sudoku-group { display: grid; background-color: transparent; border: 1px solid var(--d); }
-        .sudoku-group:not(:nth-child(1)) { border-top: 3px solid var(--d); }
-        
+        .sub-grid { display: grid; background: var(--d); gap: 1px; border: 1px solid var(--d); }
         input { 
-            width: 42px; height: 42px; text-align: center; font-size: 18px; 
-            border: 1px solid #ccc; font-weight: bold; background: white; 
-            color: var(--p); -webkit-appearance: none; box-sizing: border-box;
+            width: 100%; height: 100%; text-align: center; font-size: 1.2rem; 
+            border: none; font-weight: bold; background: white; color: var(--p);
+            box-sizing: border-box; outline: none;
         }
         .fixed { background: #e9ecef; color: var(--d); }
-        
-        /* מבנה הרמות */
-        .grid-4 { grid-template-columns: repeat(2, auto); }
-        .grid-4 .sudoku-group { grid-template-columns: repeat(2, auto); }
-        .grid-6 { grid-template-columns: repeat(2, auto); }
-        .grid-6 .sudoku-group { grid-template-columns: repeat(3, auto); }
-        .grid-9 { grid-template-columns: repeat(3, auto); }
-        .grid-9 .sudoku-group { grid-template-columns: repeat(3, auto); }
-
-        .controls { display: flex; justify-content: center; gap: 8px; margin: 15px 0; }
-        button { padding: 10px 15px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
-        .btn-blue { background: var(--p); color: white; }
-        .btn-yellow { background: var(--w); }
-        .btn-green { background: var(--s); color: white; }
+        .controls { margin-top: 15px; display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; width: 100%; }
+        button { padding: 8px 12px; cursor: pointer; border-radius: 5px; border: none; font-weight: bold; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h3>סודוקו לילדים 🧩</h3>
-        <div class="controls">
-            <button class="btn-blue" onclick="initGame(4)">4x4</button>
-            <button class="btn-blue" onclick="initGame(6)">6x6</button>
-            <button class="btn-blue" onclick="initGame(9)">9x9</button>
-        </div>
-        <div id="sudoku-board" class="sudoku-grid"></div>
-        <div class="controls">
-            <button class="btn-yellow" onclick="giveHint()">רמז 💡</button>
-            <button class="btn-green" onclick="checkSolution()">בדיקה ✅</button>
-        </div>
-        <p id="msg"></p>
+    <h3>סודוקו לילדים 🧩</h3>
+    <div class="score">ניצחונות: <span id="win-count">0</span></div>
+    <div id="board" class="sudoku-board"></div>
+    
+    <div class="controls">
+        <button onclick="initGame(4, 6)">4x4 קל</button> <button onclick="initGame(4, 4)">4x4 קשה</button>
+        <button onclick="initGame(6, 12)">6x6 קל</button> <button onclick="initGame(6, 8)">6x6 קשה</button>
+        <button onclick="initGame(9, 30)">9x9 קל</button> <button onclick="initGame(9, 20)">9x9 קשה</button>
+    </div>
+    <div class="controls">
+        <button onclick="checkSolution()" style="background: var(--d); color: white;">בדיקה ✅</button>
+        <button onclick="giveHint()" style="background: #ffcc00;">רמז 💡</button>
     </div>
 
 <script>
-    // לוחות תקינים מתמטית (פתרון אמת)
-    const validSolutions = {
-        4: [1,2,3,4, 3,4,1,2, 2,3,4,1, 4,1,2,3],
-        6: [1,2,3,4,5,6, 4,5,6,1,2,3, 2,1,5,6,3,4, 5,6,4,2,3,1, 3,4,2,5,6,1, 6,3,1,4,2,5],
-        9: [5,3,4,6,7,8,9,1,2, 6,7,2,1,9,5,3,4,8, 1,9,8,3,4,2,5,6,7, 8,5,9,7,6,1,4,2,3, 4,2,6,8,5,3,7,9,1, 7,1,3,9,2,4,8,5,6, 9,6,1,5,3,7,2,8,4, 2,8,7,4,1,9,6,3,5, 3,4,5,2,8,6,1,7,9]
+    let wins = 0;
+    let currentSolution = [];
+    const games = {
+        4: { grid: [1,2,3,4, 3,4,1,2, 2,3,4,1, 4,1,2,3], blocks: 2, sub: 2 },
+        6: { grid: [1,2,3,4,5,6, 4,5,6,1,2,3, 2,1,5,6,3,4, 5,6,4,2,3,1, 3,4,2,5,6,1, 6,3,1,4,2,5], blocks: 3, sub: 2 },
+        9: { grid: [5,3,4,6,7,8,9,1,2, 6,7,2,1,9,5,3,4,8, 1,9,8,3,4,2,5,6,7, 8,5,9,7,6,1,4,2,3, 4,2,6,8,5,3,7,9,1, 7,1,3,9,2,4,8,5,6, 9,6,1,5,3,7,2,8,4, 2,8,7,4,1,9,6,3,5, 3,4,5,2,8,6,1,7,9], blocks: 3, sub: 3 }
     };
-    let solution = [];
 
-    function initGame(size) {
-        const board = document.getElementById('sudoku-board');
+    function initGame(size, numToKeep) {
+        const board = document.getElementById('board');
         board.innerHTML = '';
-        board.className = `sudoku-grid grid-${size}`;
-        document.getElementById('msg').innerText = '';
-        solution = [...validSolutions[size]];
-
-        let groups = size === 4 ? 4 : (size === 6 ? 6 : 9);
-        for (let g = 0; g < groups; g++) {
-            let groupDiv = document.createElement('div');
-            groupDiv.className = 'sudoku-group';
-            board.appendChild(groupDiv);
-            for (let i = 0; i < size; i++) {
+        currentSolution = games[size].grid;
+        const { blocks, sub } = games[size];
+        board.style.gridTemplateColumns = `repeat(${blocks}, 1fr)`;
+        
+        let indices = Array.from({length: size * size}, (_, i) => i).sort(() => Math.random() - 0.5);
+        
+        for (let b = 0; b < size; b++) {
+            let subGrid = document.createElement('div');
+            subGrid.className = 'sub-grid';
+            subGrid.style.gridTemplateColumns = `repeat(${sub}, 1fr)`;
+            
+            for (let i = 0; i < (size/blocks) * (size/sub); i++) {
+                let flatIdx = (Math.floor(b/blocks) * blocks * size) + ((b%blocks) * sub) + (Math.floor(i/sub) * size) + (i%sub);
                 let input = document.createElement('input');
                 input.type = 'number';
-                // חשיפת 45% מהלוח
-                if (Math.random() > 0.55) {
-                    input.value = solution[g * size + i];
+                input.dataset.index = flatIdx;
+                if (indices.slice(0, numToKeep).includes(flatIdx)) {
+                    input.value = currentSolution[flatIdx];
                     input.readOnly = true;
                     input.classList.add('fixed');
                 }
-                input.dataset.index = g * size + i;
-                groupDiv.appendChild(input);
+                subGrid.appendChild(input);
             }
+            board.appendChild(subGrid);
         }
     }
 
     function checkSolution() {
         let allCorrect = true;
         document.querySelectorAll('input').forEach(input => {
-            if (input.value != solution[input.dataset.index]) allCorrect = false;
+            if (input.value && parseInt(input.value) !== currentSolution[input.dataset.index]) allCorrect = false;
         });
-        document.getElementById('msg').innerText = allCorrect ? "כל הכבוד! 🎉" : "נסו שוב 💪";
+        if (allCorrect) { wins++; document.getElementById('win-count').innerText = wins; alert("כל הכבוד! ניצחת! 🎉"); }
+        else alert("יש טעויות, נסה שוב");
     }
 
     function giveHint() {
-        let empty = [...document.querySelectorAll('input:not([readOnly])')].filter(i => i.value == "");
-        if (empty.length) {
-            let el = empty[0];
-            el.value = solution[el.dataset.index];
+        const empty = Array.from(document.querySelectorAll('input')).filter(i => !i.value);
+        if (empty.length > 0) {
+            let target = empty[Math.floor(Math.random() * empty.length)];
+            target.value = currentSolution[target.dataset.index];
+            target.classList.add('fixed');
         }
     }
-
-    initGame(4);
+    initGame(4, 6);
 </script>
 </body>
 </html>
