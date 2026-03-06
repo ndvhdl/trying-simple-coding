@@ -2,29 +2,18 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>סודוקו לילדים עם גבולות</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>סודוקו לילדים</title>
     <style>
-        :root { --p: #007aff; --d: #2c3e50; }
-        body { font-family: sans-serif; text-align: center; background: #f4f7f9; margin: 0; padding: 10px; }
-        
-        .grid { display: grid; gap: 1px; margin: 20px auto; background: var(--d); border: 3px solid var(--d); width: fit-content; }
-        
+        :root { --p: #007aff; --s: #34c759; --w: #ffcc00; --d: #2c3e50; }
+        body { font-family: sans-serif; text-align: center; background: #f4f7f9; padding: 10px; }
+        .grid { display: grid; gap: 2px; margin: 20px auto; background: var(--d); border: 3px solid var(--d); width: fit-content; }
         input { width: 40px; height: 40px; text-align: center; font-size: 18px; border: none; font-weight: bold; background: white; color: var(--p); }
         .fixed { background: #e9ecef; color: var(--d); }
-
-        /* יצירת קווי הפרדה ל-6x6 (כל 2 עמודות וכל 3 שורות) */
-        .grid-6 input:nth-child(2n) { border-left: 2px solid var(--d); }
-        .grid-6 input:nth-child(n+13):nth-child(-n+18) { border-top: 2px solid var(--d); }
-        .grid-6 input:nth-child(n+25):nth-child(-n+30) { border-top: 2px solid var(--d); }
-
-        /* יצירת קווי הפרדה ל-9x9 (כל 3 עמודות וכל 3 שורות) */
-        .grid-9 input:nth-child(3n) { border-left: 2px solid var(--d); }
-        .grid-9 input:nth-child(n+19):nth-child(-n+27),
-        .grid-9 input:nth-child(n+46):nth-child(-n+54) { border-top: 2px solid var(--d); }
-
         .controls { margin: 15px 0; }
-        button { padding: 10px 15px; margin: 5px; cursor: pointer; border-radius: 8px; border: none; background: var(--p); color: white; }
+        button { padding: 12px 20px; margin: 5px; cursor: pointer; border-radius: 8px; border: none; background: var(--p); color: white; font-weight: bold; }
+        .btn-y { background: var(--w); color: black; }
+        .btn-g { background: var(--s); color: white; }
     </style>
 </head>
 <body>
@@ -34,6 +23,10 @@
         <button onclick="startGame(4)">4x4</button>
         <button onclick="startGame(6)">6x6</button>
         <button onclick="startGame(9)">9x9</button>
+    </div>
+    <div class="controls">
+        <button class="btn-y" onclick="hint()">רמז 💡</button>
+        <button class="btn-g" onclick="check()">בדיקה ✅</button>
     </div>
     <p id="msg"></p>
 
@@ -47,9 +40,9 @@
 
     function startGame(size) {
         const board = document.getElementById('board');
-        board.className = `grid grid-${size}`;
         board.style.gridTemplateColumns = `repeat(${size}, auto)`;
         board.innerHTML = '';
+        document.getElementById('msg').innerText = '';
         currentSol = [...boards[size]];
         
         currentSol.forEach((val, i) => {
@@ -60,8 +53,24 @@
                 input.readOnly = true;
                 input.classList.add('fixed');
             }
+            input.dataset.idx = i;
             board.appendChild(input);
         });
+    }
+
+    function hint() {
+        let empty = [...document.querySelectorAll('input:not([readOnly])')].filter(i=>i.value=="");
+        if(empty.length) {
+            let el = empty[Math.floor(Math.random()*empty.length)];
+            el.value = currentSol[el.dataset.idx];
+            el.style.background = "#d4edda";
+        }
+    }
+
+    function check() {
+        let inputs = document.querySelectorAll('input');
+        let win = [...inputs].every((el, i) => el.value == currentSol[i]);
+        document.getElementById('msg').innerText = win ? "כל הכבוד! 🎉" : "נסו שוב 💪";
     }
     startGame(4);
 </script>
