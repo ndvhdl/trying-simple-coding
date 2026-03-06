@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>סודוקו לילדים עם גבולות</title>
+    <style>
+        :root { --p: #007aff; --d: #2c3e50; }
+        body { font-family: sans-serif; text-align: center; background: #f4f7f9; margin: 0; padding: 10px; }
+        
+        .grid { display: grid; gap: 1px; margin: 20px auto; background: var(--d); border: 3px solid var(--d); width: fit-content; }
+        
+        input { width: 40px; height: 40px; text-align: center; font-size: 18px; border: none; font-weight: bold; background: white; color: var(--p); }
+        .fixed { background: #e9ecef; color: var(--d); }
+
+        /* יצירת קווי הפרדה ל-6x6 (כל 2 עמודות וכל 3 שורות) */
+        .grid-6 input:nth-child(2n) { border-left: 2px solid var(--d); }
+        .grid-6 input:nth-child(n+13):nth-child(-n+18) { border-top: 2px solid var(--d); }
+        .grid-6 input:nth-child(n+25):nth-child(-n+30) { border-top: 2px solid var(--d); }
+
+        /* יצירת קווי הפרדה ל-9x9 (כל 3 עמודות וכל 3 שורות) */
+        .grid-9 input:nth-child(3n) { border-left: 2px solid var(--d); }
+        .grid-9 input:nth-child(n+19):nth-child(-n+27),
+        .grid-9 input:nth-child(n+46):nth-child(-n+54) { border-top: 2px solid var(--d); }
+
+        .controls { margin: 15px 0; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; border-radius: 8px; border: none; background: var(--p); color: white; }
+    </style>
+</head>
+<body>
+    <h3>סודוקו לילדים 🧩</h3>
+    <div id="board" class="grid"></div>
+    <div class="controls">
+        <button onclick="startGame(4)">4x4</button>
+        <button onclick="startGame(6)">6x6</button>
+        <button onclick="startGame(9)">9x9</button>
+    </div>
+    <p id="msg"></p>
+
+<script>
+    const boards = {
+        4: [1,2,3,4, 3,4,1,2, 2,3,4,1, 4,1,2,3],
+        6: [1,2,3,4,5,6, 4,5,6,1,2,3, 2,3,1,5,6,4, 5,6,4,2,3,1, 3,1,2,6,4,5, 6,4,5,3,1,2],
+        9: [5,3,4,6,7,8,9,1,2, 6,7,2,1,9,5,3,4,8, 1,9,8,3,4,2,5,6,7, 8,5,9,7,6,1,4,2,3, 4,2,6,8,5,3,7,9,1, 7,1,3,9,2,4,8,5,6, 9,6,1,5,3,7,2,8,4, 2,8,7,4,1,9,6,3,5, 3,4,5,2,8,6,1,7,9]
+    };
+    let currentSol = [];
+
+    function startGame(size) {
+        const board = document.getElementById('board');
+        board.className = `grid grid-${size}`;
+        board.style.gridTemplateColumns = `repeat(${size}, auto)`;
+        board.innerHTML = '';
+        currentSol = [...boards[size]];
+        
+        currentSol.forEach((val, i) => {
+            let input = document.createElement('input');
+            input.type = 'number';
+            if (Math.random() < 0.4) {
+                input.value = val;
+                input.readOnly = true;
+                input.classList.add('fixed');
+            }
+            board.appendChild(input);
+        });
+    }
+    startGame(4);
+</script>
+</body>
+</html>
