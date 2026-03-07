@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>סודוקו לילדים</title>
+    <title>סודוקו לילדים מושלם</title>
     <style>
         :root { --d: #2c3e50; --p: #007aff; }
         body { font-family: sans-serif; text-align: center; background: #f4f7f9; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
@@ -12,61 +12,83 @@
             display: grid; border: 3px solid var(--d); background-color: var(--d); 
             gap: 2px; width: 95vw; max-width: 400px; aspect-ratio: 1/1;
         }
-        .sub-grid { display: grid; background: var(--d); gap: 1px; border: 1px solid var(--d); }
+        .sub-grid { display: grid; background: var(--d); gap: 1px; }
         input { 
             width: 100%; height: 100%; text-align: center; font-size: 1.2rem; 
             border: none; font-weight: bold; background: white; color: var(--p);
-            box-sizing: border-box; outline: none;
+            box-sizing: border-box; outline: none; -moz-appearance: textfield;
         }
+        input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         .fixed { background: #e9ecef; color: var(--d); }
-        .controls { margin-top: 15px; display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; width: 100%; }
-        button { padding: 8px 12px; cursor: pointer; border-radius: 5px; border: none; font-weight: bold; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        .controls { margin-top: 15px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; width: 100%; }
+        button { padding: 10px 15px; cursor: pointer; border-radius: 8px; border: none; font-weight: bold; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.2s; }
+        button:active { transform: scale(0.95); }
+        .btn-main { background: var(--d); color: white; }
+        .btn-hint { background: #ffcc00; }
     </style>
 </head>
 <body>
     <h3>סודוקו לילדים 🧩</h3>
     <div class="score">ניצחונות: <span id="win-count">0</span></div>
+    
     <div id="board" class="sudoku-board"></div>
     
     <div class="controls">
-        <button onclick="initGame(4, 6)">4x4 קל</button> <button onclick="initGame(4, 4)">4x4 קשה</button>
-        <button onclick="initGame(6, 12)">6x6 קל</button> <button onclick="initGame(6, 8)">6x6 קשה</button>
-        <button onclick="initGame(9, 30)">9x9 קל</button> <button onclick="initGame(9, 20)">9x9 קשה</button>
+        <button onclick="initGame(4, 8)">4x4 קל</button>
+        <button onclick="initGame(4, 5)">4x4 קשה</button>
+        <button onclick="initGame(6, 18)">6x6 קל</button>
+        <button onclick="initGame(6, 12)">6x6 קשה</button>
+        <button onclick="initGame(9, 35)">9x9 קל</button>
+        <button onclick="initGame(9, 24)">9x9 קשה</button>
     </div>
+
     <div class="controls">
-        <button onclick="checkSolution()" style="background: var(--d); color: white;">בדיקה ✅</button>
-        <button onclick="giveHint()" style="background: #ffcc00;">רמז 💡</button>
+        <button class="btn-main" onclick="checkSolution()">בדיקה ✅</button>
+        <button class="btn-hint" onclick="giveHint()">רמז 💡</button>
     </div>
 
 <script>
     let wins = 0;
     let currentSolution = [];
-    const games = {
-        4: { grid: [1,2,3,4, 3,4,1,2, 2,3,4,1, 4,1,2,3], blocks: 2, sub: 2 },
-        6: { grid: [1,2,3,4,5,6, 4,5,6,1,2,3, 2,1,5,6,3,4, 5,6,4,2,3,1, 3,4,2,5,6,1, 6,3,1,4,2,5], blocks: 3, sub: 2 },
-        9: { grid: [5,3,4,6,7,8,9,1,2, 6,7,2,1,9,5,3,4,8, 1,9,8,3,4,2,5,6,7, 8,5,9,7,6,1,4,2,3, 4,2,6,8,5,3,7,9,1, 7,1,3,9,2,4,8,5,6, 9,6,1,5,3,7,2,8,4, 2,8,7,4,1,9,6,3,5, 3,4,5,2,8,6,1,7,9], blocks: 3, sub: 3 }
+    let currentBoardSize = 4;
+
+    const gamesConfig = {
+        4: { grid: [1,2,3,4, 3,4,1,2, 2,3,4,1, 4,1,2,3], bCols: 2, bRows: 2, sCols: 2, sRows: 2 },
+        6: { grid: [1,2,3,4,5,6, 4,5,6,1,2,3, 2,1,5,6,3,4, 5,6,4,2,3,1, 3,4,2,5,6,1, 6,3,1,4,2,5], bCols: 2, bRows: 3, sCols: 3, sRows: 2 },
+        9: { grid: [5,3,4,6,7,8,9,1,2, 6,7,2,1,9,5,3,4,8, 1,9,8,3,4,2,5,6,7, 8,5,9,7,6,1,4,2,3, 4,2,6,8,5,3,7,9,1, 7,1,3,9,2,4,8,5,6, 9,6,1,5,3,7,2,8,4, 2,8,7,4,1,9,6,3,5, 3,4,5,2,8,6,1,7,9], bCols: 3, bRows: 3, sCols: 3, sRows: 3 }
     };
 
     function initGame(size, numToKeep) {
+        currentBoardSize = size;
         const board = document.getElementById('board');
         board.innerHTML = '';
-        currentSolution = games[size].grid;
-        const { blocks, sub } = games[size];
-        board.style.gridTemplateColumns = `repeat(${blocks}, 1fr)`;
+        const conf = gamesConfig[size];
+        currentSolution = conf.grid;
         
+        board.style.gridTemplateColumns = `repeat(${conf.bCols}, 1fr)`;
+        board.style.gridTemplateRows = `repeat(${conf.bRows}, 1fr)`;
+
         let indices = Array.from({length: size * size}, (_, i) => i).sort(() => Math.random() - 0.5);
-        
-        for (let b = 0; b < size; b++) {
+        let visibleIndices = indices.slice(0, numToKeep);
+
+        for (let b = 0; b < (conf.bCols * conf.bRows); b++) {
             let subGrid = document.createElement('div');
             subGrid.className = 'sub-grid';
-            subGrid.style.gridTemplateColumns = `repeat(${sub}, 1fr)`;
+            subGrid.style.gridTemplateColumns = `repeat(${conf.sCols}, 1fr)`;
             
-            for (let i = 0; i < (size/blocks) * (size/sub); i++) {
-                let flatIdx = (Math.floor(b/blocks) * blocks * size) + ((b%blocks) * sub) + (Math.floor(i/sub) * size) + (i%sub);
+            let bRow = Math.floor(b / conf.bCols);
+            let bCol = b % conf.bCols;
+
+            for (let i = 0; i < (conf.sCols * conf.sRows); i++) {
+                let r = bRow * conf.sRows + Math.floor(i / conf.sCols);
+                let c = bCol * conf.sCols + (i % conf.sCols);
+                let flatIdx = r * size + c;
+
                 let input = document.createElement('input');
                 input.type = 'number';
                 input.dataset.index = flatIdx;
-                if (indices.slice(0, numToKeep).includes(flatIdx)) {
+                
+                if (visibleIndices.includes(flatIdx)) {
                     input.value = currentSolution[flatIdx];
                     input.readOnly = true;
                     input.classList.add('fixed');
@@ -78,23 +100,38 @@
     }
 
     function checkSolution() {
-        let allCorrect = true;
-        document.querySelectorAll('input').forEach(input => {
-            if (input.value && parseInt(input.value) !== currentSolution[input.dataset.index]) allCorrect = false;
+        let inputs = document.querySelectorAll('input');
+        let allFilled = true;
+        let isCorrect = true;
+
+        inputs.forEach(input => {
+            let val = parseInt(input.value);
+            if (!val) allFilled = false;
+            if (val && val !== currentSolution[input.dataset.index]) isCorrect = false;
         });
-        if (allCorrect) { wins++; document.getElementById('win-count').innerText = wins; alert("כל הכבוד! ניצחת! 🎉"); }
-        else alert("יש טעויות, נסה שוב");
+
+        if (allFilled && isCorrect) {
+            wins++;
+            document.getElementById('win-count').innerText = wins;
+            alert("כל הכבוד! פתרת את הלוח בצורה מושלמת! 🎉");
+        } else if (!isCorrect) {
+            alert("יש כמה טעויות בדרך... בדוק שוב את המספרים.");
+        } else {
+            alert("הכיוון טוב, אבל הלוח עדיין לא מלא.");
+        }
     }
 
     function giveHint() {
-        const empty = Array.from(document.querySelectorAll('input')).filter(i => !i.value);
-        if (empty.length > 0) {
-            let target = empty[Math.floor(Math.random() * empty.length)];
-            target.value = currentSolution[target.dataset.index];
-            target.classList.add('fixed');
+        let emptyInputs = Array.from(document.querySelectorAll('input:not(.fixed)')).filter(i => !i.value);
+        if (emptyInputs.length > 0) {
+            let target = emptyInputs[Math.floor(Math.random() * emptyInputs.length)];
+            let idx = target.dataset.index;
+            target.value = currentSolution[idx];
+            target.style.color = "green"; // סימון שהרמז ניתן
         }
     }
-    initGame(4, 6);
+
+    initGame(4, 8); // התחלה עם לוח קל
 </script>
 </body>
 </html>
